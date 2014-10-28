@@ -27,16 +27,16 @@ define('net/RBAdapter',
             },
 
             ajax: function(options) {
-                var token = this.getCookie('csrftoken'),
+                return this.getCookie('csrftoken').then(function(token) {
+                    var defaultOptions = {
+                            withCredentials: true,
+                            headers: { 'X-CSRFToken': token }
+                        },
 
-                    defaultOptions = {
-                        withCredentials: true,
-                        headers: { 'X-CSRFToken': token }
-                    },
+                        ajaxOptions = $.extend(defaultOptions, options);
 
-                    ajaxOptions = $.extend(defaultOptions, options);
-
-                return $.ajax(ajaxOptions);
+                    return $.ajax(ajaxOptions);
+                });
             },
 
             getJSON: function(path) {
