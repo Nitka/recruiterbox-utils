@@ -1,8 +1,9 @@
 define('net/RBAdapter',
     [
-        'jquery'
+        'jquery',
+        'underscore'
     ],
-    function($) {
+    function($, _) {
 
         var host = 'https://nitka.recruiterbox.com',
 
@@ -13,8 +14,32 @@ define('net/RBAdapter',
                 openings: 'openings',
                 jobs: 'published_jobs',
                 labels: 'labels',
+                candidates: 'candidates',
                 custom_fields: ''
-            };
+            },
+
+            candidateDefaults = {
+                accessible_to: [],
+                all_docs: [],
+                candidate_messages: [],
+                candidate_source: '',
+                description: '',
+                docs: [],
+                email: '',
+                first_name: '',
+                index: 0,
+                internal_messages: [],
+                interviews: [],
+                labels: [],
+                last_name: '',
+                logs: [],
+                name: '',
+                phone: '',
+                todos: '',
+                view_url: '#candidates/'
+            },
+
+            requiredProperties = { candidate: ['first_name'] };
 
         return {
 
@@ -30,7 +55,7 @@ define('net/RBAdapter',
                 return this.getCookie('csrftoken').then(function(token) {
                     var defaultOptions = {
                             withCredentials: true,
-                            headers: { 'X-CSRFToken': token }
+                            headers: { 'X-CSRFToken': token.value }
                         },
 
                         ajaxOptions = $.extend(defaultOptions, options);
@@ -46,6 +71,20 @@ define('net/RBAdapter',
                     contentType: 'application/json',
                     url: host + services.api_prefix + path
                 });
+            },
+
+            pushJSON: function(path, data) {
+                return this.ajax({
+                    type: 'POST',
+                    dataType: 'json',
+                    contentType: 'application/json',
+                    data: JSON.stringify(data),
+                    url: host + services.api_prefix + path + '/'
+                });
+            },
+
+            pushCandidate: function(payload) {
+                return this.pushJSON('candidates', payload);
             },
 
             getList: function(type) {
@@ -66,6 +105,36 @@ define('net/RBAdapter',
 
             getCustomFields: function() {
                 return this.getList(services.custom_fields);
+            },
+
+            createLabel: function(text) {
+                return { name: text };
+            },
+
+            createCandidate: function(options) {
+                var defaults = candidateDefaults,
+                    candidate = $.extend(defaults, options),
+                    self = this;
+
+                return this.validateFields('candidate', candidate).then(function() {
+                    return self.pushCandidate(candidate);
+                });
+            },
+
+            validateFields: function(modelType, model) {
+                var fieldsToValidate = requiredProperties[modelType];
+
+                return new Promise(function(resolve, reject) {
+                    var missedFields = fieldsToValidate.filter(function(field) {
+                        return _.isEmpty(model[field]);
+                    });
+
+                    if (_.isEmpty(missedFields)) {
+                        resolve(true);
+                    } else {
+                        reject(missedFields);
+                    }
+                });
             }
         }
     });

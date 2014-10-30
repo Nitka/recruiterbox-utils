@@ -26,7 +26,13 @@ define('background',
 
         chrome.browserAction.setBadgeText({ text: 'OK' });
 
-        RBAdapter.getLabels().then(function(data) {
-            console.log(data);
+        var arrays = ['labels', 'openings'];
+
+        arrays.map(function(type) {
+            RBAdapter.getList(type).then(function(data) {
+                console.log(type, data.objects);
+            });
         });
+
+        window.RBAdapter = RBAdapter;
     });
