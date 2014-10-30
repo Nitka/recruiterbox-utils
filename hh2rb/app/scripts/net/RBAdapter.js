@@ -22,7 +22,7 @@ define('net/RBAdapter',
                     upload_doc: 'https://nitka.recruiterbox.com/api/v1/docs/'
                 },
 
-                default_file_name: 'file'
+                upload_doc_form_field: 'doc'
             },
 
             candidateDefaults = {
@@ -145,24 +145,21 @@ define('net/RBAdapter',
                 });
             },
 
-            uploadMSFileByURL: function(url, fileName) {
+            uploadFile: function(file) {
                 return this.getCookie('csrftoken').then(function(token) {
                     var ajaxOptions = {
-                        withCredentials: true,
-                        headers: { 'X-CSRFToken': token.value }
-                    };
+                            withCredentials: true,
+                            headers: { 'X-CSRFToken': token.value }
+                        },
 
-                    return FileUploader.uploadFileByURL(url,
-                        'msword',
-                        fileName + '.rtf',
-                        config.services.upload_doc,
-                        ajaxOptions
-                    );
+                        field = config.upload_doc_form_field;
+
+                    return FileUploader.uploadFile(file, config.services.upload_doc, ajaxOptions, field);
                 });
             },
 
-            createMSFileFromURL: function(url, fileName) {
-                return this.uploadMSFileByURL(url, fileName || config.default_file_name).then(function(file) {
+            createDoc: function(file) {
+                return this.uploadFile(file).then(function(file) {
                     return file.resource_uri;
                 });
             }

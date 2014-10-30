@@ -19,9 +19,10 @@ define('background',
         'jquery',
         'handlebars',
         'underscore',
-        'net/RBAdapter'
+        'net/RBAdapter',
+        'net/HHAdapter'
     ],
-    function($, Handlebars, _, RBAdapter) {
+    function($, Handlebars, _, RBAdapter, HHAdapter) {
         'use strict';
 
         chrome.browserAction.setBadgeText({ text: 'OK' });
@@ -35,4 +36,5 @@ define('background',
         });
 
         window.RBAdapter = RBAdapter;
+        window.HHAdapter = HHAdapter;
     });
