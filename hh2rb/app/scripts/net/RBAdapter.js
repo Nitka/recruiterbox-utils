@@ -1,21 +1,28 @@
 define('net/RBAdapter',
     [
         'jquery',
-        'underscore'
+        'underscore',
+        'net/FileUploader'
     ],
-    function($, _) {
+    function($, _, FileUploader) {
 
-        var host = 'https://nitka.recruiterbox.com',
+        var config = {
+                host: 'https://nitka.recruiterbox.com',
 
-            services = {
-                api_prefix: '/api/v1/',
-                list_postfix: '?limit=0',
+                services: {
+                    api_prefix: '/api/v1/',
+                    list_postfix: '?limit=0',
 
-                openings: 'openings',
-                jobs: 'published_jobs',
-                labels: 'labels',
-                candidates: 'candidates',
-                custom_fields: ''
+                    openings: 'openings',
+                    jobs: 'published_jobs',
+                    labels: 'labels',
+                    candidates: 'candidates',
+                    custom_fields: '',
+
+                    upload_doc: 'https://nitka.recruiterbox.com/api/v1/docs/'
+                },
+
+                default_file_name: 'file'
             },
 
             candidateDefaults = {
@@ -41,11 +48,12 @@ define('net/RBAdapter',
 
             requiredProperties = { candidate: ['first_name'] };
 
+
         return {
 
             getCookie: function(name) {
                 return new Promise(function(resolve) {
-                    chrome.cookies.get({ url: host, name: name }, function(cookie) {
+                    chrome.cookies.get({ url: config.host, name: name }, function(cookie) {
                         resolve(cookie);
                     });
                 });
@@ -69,7 +77,7 @@ define('net/RBAdapter',
                     type: 'GET',
                     dataType: 'json',
                     contentType: 'application/json',
-                    url: host + services.api_prefix + path
+                    url: config.host + config.services.api_prefix + path
                 });
             },
 
@@ -79,7 +87,7 @@ define('net/RBAdapter',
                     dataType: 'json',
                     contentType: 'application/json',
                     data: JSON.stringify(data),
-                    url: host + services.api_prefix + path + '/'
+                    url: config.host + config.services.api_prefix + path + '/'
                 });
             },
 
@@ -92,19 +100,19 @@ define('net/RBAdapter',
             },
 
             getOpenings: function() {
-                return this.getList(services.openings);
+                return this.getList(config.services.openings);
             },
 
             getJobs: function() {
-                return this.getList(services.jobs);
+                return this.getList(config.services.jobs);
             },
 
             getLabels: function() {
-                return this.getList(services.labels);
+                return this.getList(config.services.labels);
             },
 
             getCustomFields: function() {
-                return this.getList(services.custom_fields);
+                return this.getList(config.services.custom_fields);
             },
 
             createLabel: function(text) {
@@ -134,6 +142,28 @@ define('net/RBAdapter',
                     } else {
                         reject(missedFields);
                     }
+                });
+            },
+
+            uploadMSFileByURL: function(url, fileName) {
+                return this.getCookie('csrftoken').then(function(token) {
+                    var ajaxOptions = {
+                        withCredentials: true,
+                        headers: { 'X-CSRFToken': token.value }
+                    };
+
+                    return FileUploader.uploadFileByURL(url,
+                        'msword',
+                        fileName + '.rtf',
+                        config.services.upload_doc,
+                        ajaxOptions
+                    );
+                });
+            },
+
+            createMSFileFromURL: function(url, fileName) {
+                return this.uploadMSFileByURL(url, fileName || config.default_file_name).then(function(file) {
+                    return file.resource_uri;
                 });
             }
         }
