@@ -14,37 +14,66 @@ define('HHCandidatePageParser',
         'use strict';
 
         var config = {
-            baseURL: 'http://hh.ru'
+            baseURL: 'http://hh.ru',
+
+            first_last_names_delimiter: ' ',
+
+            name_selector: '.resume__personal__name[itemprop="name"]',
+            contacts_selector: '.resume__contacts',
+            contacts_info_selector: '.resume__inlinelist',
+            contacts_info_item: '.resume__inlinelist__item',
+            contacts_preferred: '.resume__contacts__preferred',
+            contacts_email_selector: '[itemprop="email"]',
+            contacts_phone_info_selector: '.resume__contacts__phone',
+            contacts_phone_number_selector: '[itemprop="telephone"]',
+            contacts_skype_selector: '.resume__contacts__personalsite.m-siteicon_skype',
+            address_selector: '[itemprop="address"]',
+            address_city_selector: '[itemprop="addressLocality"]',
+            resume_file_info_selector: '.list-params__item_download-msword a'
         };
 
         return {
 
             getName: function(html) {
-                return $('.resume__personal__name[itemprop="name"]', html).text();
+                return $(config.name_selector, html).text();
             },
 
             getFirstName: function(name) {
-                return name.split(' ')[1];
+                return name.split(config.first_last_names_delimiter)[1];
             },
 
             getLastName: function(name) {
-                return name.split(' ')[0];
+                return name.split(config.first_last_names_delimiter)[0];
             },
 
-            getEmail: function(page) {
-                return $('.resume__contacts').find('.resume__contacts__preferred').find('[itemprop="email"]').text();
+            getEmail: function(html) {
+                return $(config.contacts_selector, html)
+                    .find(config.contacts_preferred)
+                    .find(config.contacts_email_selector)
+                    .text();
             },
 
-            getCity: function() {
-                return $('.resume__inlinelist').find('.resume__inlinelist__item[itemprop="address"]').find('[itemprop="addressLocality"]').text();
+            getCity: function(html) {
+                return $(config.contacts_info_selector, html)
+                    .find(config.contacts_info_item + config.address_selector)
+                    .find(config.address_city_selector)
+                    .text();
             },
 
-            getPhoneNumber: function() {
-                return $('.resume__contacts').find('.resume__contacts__phone').find('[itemprop="telephone"]').text().trim();
+            getPhoneNumber: function(html) {
+                return $(config.contacts_selector, html)
+                    .find(config.contacts_phone_info_selector)
+                    .find(config.contacts_phone_number_selector)
+                    .text()
+                    .trim()
+                    .replace(/ /g, '')
             },
 
-            getSkypeName: function() {
-                return $('.resume__inlinelist').find('.resume__inlinelist__item').find('.resume__contacts__personalsite.m-siteicon_skype').text();
+            getSkypeName: function(html) {
+                return $(config.contacts_info_selector, html)
+                    .find(config.contacts_info_item)
+                    .find(config.contacts_skype_selector)
+                    .text();
             },
 
             getVacancyId: function() {
@@ -53,8 +82,8 @@ define('HHCandidatePageParser',
                 return queryParams.vacancyId;
             },
 
-            getResumeURL: function() {
-                var path = $('.list-params__item_download-msword a').attr('href');
+            getResumeURL: function(html) {
+                var path = $(config.resume_file_info_selector, html).attr('href');
 
                 return path ? config.baseURL + path : null;
             },
@@ -66,10 +95,10 @@ define('HHCandidatePageParser',
                     first_name: this.getFirstName(name),
                     last_name: this.getLastName(name),
                     email: this.getEmail(page),
-                    skype: this.getSkypeName(),
+                    skype: this.getSkypeName(page),
                     city: this.getCity(page),
-                    vacancyId: this.getVacancyId(),
-                    resumeURL: this.getResumeURL()
+                    vacancyId: this.getVacancyId(page),
+                    resumeURL: this.getResumeURL(page)
                 }
             }
         };
