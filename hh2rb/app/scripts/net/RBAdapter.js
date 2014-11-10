@@ -96,7 +96,7 @@ define('net/RBAdapter',
             },
 
             getList: function(type) {
-                return this.getJSON(type);
+                return this.getJSON(type + config.services.list_postfix);
             },
 
             getOpenings: function() {

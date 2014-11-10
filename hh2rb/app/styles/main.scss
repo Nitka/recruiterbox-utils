@@ -1,4 +1,7 @@
+@import "bootstrap-sass-official/assets/stylesheets/bootstrap";
+
 $padding: 20px;
 body {
-  padding: $padding;
+	min-width: 200px;
+	padding: $padding;
 }
